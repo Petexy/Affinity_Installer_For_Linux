@@ -229,170 +229,172 @@ class MainWindow(Adw.ApplicationWindow):
         dialog.connect("response", on_response)
         dialog.present()
 
-def run_update_command(self):
-    return_code = 0  # Start assuming success
-    self.welcome_label.set_visible(False)
+    def run_update_command(self):
+        return_code = -1
+        self.welcome_label.set_visible(False)
+        try:
+            # First command (requires root privileges)
+            process = subprocess.Popen(
+                "run0 pacman -Syu wine-affinity --noconfirm && chmod 775 $HOME/.local/share/linexin/scripts/wine-affinity-config.sh",
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True
+            )
 
-    try:
-        # First command (requires root privileges)
-        process = subprocess.Popen(
-            "run0 pacman -Syu wine-affinity --noconfirm && chmod 775 $HOME/.local/share/linexin/scripts/wine-affinity-config.sh",
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True
-        )
+            while True:
+                output = process.stdout.readline()
+                if output == "" and process.poll() is not None:
+                    break
+                if output:
+                    line = output.strip()
+                    self.output_buffer.append(line)
+                    GLib.idle_add(self.append_output_if_visible, line)
 
-        while True:
-            output = process.stdout.readline()
-            if output == "" and process.poll() is not None:
-                break
-            if output:
-                line = output.strip()
-                self.output_buffer.append(line)
-                GLib.idle_add(self.append_output_if_visible, line)
+            return_code = process.poll()
+            if return_code == 0:
+                self.output_buffer.append(_("Root command completed successfully."))
+                GLib.idle_add(self.append_output_if_visible, _("Root command completed successfully."))
+            else:
+                error_line = _("Root command failed with return code {}.").format(return_code)
+                self.output_buffer.append(error_line)
+                GLib.idle_add(self.append_output_if_visible, error_line)
+                return  # Skip subsequent commands if root command fails
 
-        first_return_code = process.poll()
-        if first_return_code == 0:
-            self.output_buffer.append(_("Root command completed successfully."))
-            GLib.idle_add(self.append_output_if_visible, _("Root command completed successfully."))
-        else:
-            error_line = _("Root command failed with return code {}.").format(first_return_code)
-            self.output_buffer.append(error_line)
-            GLib.idle_add(self.append_output_if_visible, error_line)
-            return_code = -1
-            raise RuntimeError("First command failed")
+            # Second command (non-root, placeholder)
+            second_command = "bash $HOME/.local/share/linexin/scripts/wine-affinity-config.sh"  
+            process_second = subprocess.Popen(
+                second_command,
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True
+            )
 
-        # Second command (non-root, allowed to fail)
-        second_command = "bash $HOME/.local/share/linexin/scripts/wine-affinity-config.sh"
-        process_second = subprocess.Popen(
-            second_command,
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True
-        )
+            while True:
+                output = process_second.stdout.readline()
+                if output == "" and process_second.poll() is not None:
+                    break
+                if output:
+                    line = output.strip()
+                    self.output_buffer.append(line)
+                    GLib.idle_add(self.append_output_if_visible, line)
 
-        while True:
-            output = process_second.stdout.readline()
-            if output == "" and process_second.poll() is not None:
-                break
-            if output:
-                line = output.strip()
-                self.output_buffer.append(line)
-                GLib.idle_add(self.append_output_if_visible, line)
+            second_return_code = process_second.poll()
+            if second_return_code == 0 or second_return_code == -1:
+                self.output_buffer.append(_("Second command completed successfully."))
+                GLib.idle_add(self.append_output_if_visible, _("Second command completed successfully."))
+            else:
+                error_line = _("Second command failed with return code {}.").format(second_return_code)
+                self.output_buffer.append(error_line)
+                GLib.idle_add(self.append_output_if_visible, error_line)
+                return  # Skip subsequent commands if second command fails
 
-        second_return_code = process_second.poll()
-        if second_return_code == 0:
-            self.output_buffer.append(_("Second command completed successfully."))
-            GLib.idle_add(self.append_output_if_visible, _("Second command completed successfully."))
-        else:
-            warning_line = _("Second command failed with return code {} (continuing anyway).").format(second_return_code)
-            self.output_buffer.append(warning_line)
-            GLib.idle_add(self.append_output_if_visible, warning_line)
+            # Show file chooser dialog for third command
+            self.file_chooser_event = threading.Event()
+            GLib.idle_add(self.show_file_chooser)
+            self.file_chooser_event.wait()
 
-        # File chooser for third command
-        self.file_chooser_event = threading.Event()
-        GLib.idle_add(self.show_file_chooser)
-        self.file_chooser_event.wait()
+            if self.selected_file is None:
+                return_code = -1
+                return  # Skip subsequent commands if no file is selected
 
-        if self.selected_file is None:
-            self.output_buffer.append(_("No file selected. Skipping third command."))
-            return_code = -1
-            raise RuntimeError("No file selected")
+            # Third command (non-root)
+            third_command = f'rum wine-affinity "{os.path.expanduser("~/.WineAffinity")}" wine "{self.selected_file}"'
+            process_third = subprocess.Popen(
+                third_command,
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True
+            )
 
-        # Third command (non-root)
-        third_command = f'rum wine-affinity "{os.path.expanduser("~/.WineAffinity")}" wine "{self.selected_file}"'
-        process_third = subprocess.Popen(
-            third_command,
-            shell=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True
-        )
+            while True:
+                output = process_third.stdout.readline()
+                if output == "" and process_third.poll() is not None:
+                    break
+                if output:
+                    line = output.strip()
+                    self.output_buffer.append(line)
+                    GLib.idle_add(self.append_output_if_visible, line)
 
-        while True:
-            output = process_third.stdout.readline()
-            if output == "" and process_third.poll() is not None:
-                break
-            if output:
-                line = output.strip()
-                self.output_buffer.append(line)
-                GLib.idle_add(self.append_output_if_visible, line)
+            third_return_code = process_third.poll()
+            if third_return_code == 0:
+                self.output_buffer.append(_("Third command completed successfully."))
+                GLib.idle_add(self.append_output_if_visible, _("Third command completed successfully."))
+            else:
+                error_line = _("Third command failed with return code {}.").format(third_return_code)
+                self.output_buffer.append(error_line)
+                GLib.idle_add(self.append_output_if_visible, error_line)
+                return_code = third_return_code  # Update return_code to reflect failure
+                return  # Skip fourth command if third command fails
 
-        third_return_code = process_third.poll()
-        if third_return_code == 0:
-            self.output_buffer.append(_("Third command completed successfully."))
-            GLib.idle_add(self.append_output_if_visible, _("Third command completed successfully."))
-        else:
-            error_line = _("Third command failed with return code {}.").format(third_return_code)
-            self.output_buffer.append(error_line)
-            GLib.idle_add(self.append_output_if_visible, error_line)
-            return_code = -1
-            raise RuntimeError("Third command failed")
+            # Fourth command: Check for folders and move .desktop files
+            affinity_dir = os.path.expanduser("~/.WineAffinity/drive_c/Program Files/Affinity")
+            shortcuts_dir = os.path.expanduser("~/.local/share/linexin/shortcuts")
+            applications_dir = os.path.expanduser("~/.local/share/applications")
+            folder_desktop_map = {
+                "Photo 2": "photo-2.desktop",
+                "Designer 2": "designer-2.desktop",
+                "Publisher 2": "publisher-2.desktop" 
+            }
 
-        # Fourth command: Move .desktop files
-        affinity_dir = os.path.expanduser("~/.WineAffinity/drive_c/Program Files/Affinity")
-        shortcuts_dir = os.path.expanduser("~/.local/share/linexin/shortcuts")
-        applications_dir = os.path.expanduser("~/.local/share/applications")
-        folder_desktop_map = {
-            "Photo 2": "photo-2.desktop",
-            "Designer 2": "designer-2.desktop",
-            "Publisher 2": "publisher-2.desktop"
-        }
+            # Ensure applications directory exists
+            os.makedirs(applications_dir, exist_ok=True)
 
-        os.makedirs(applications_dir, exist_ok=True)
+            for folder, desktop_file in folder_desktop_map.items():
+                folder_path = os.path.join(affinity_dir, folder)
+                source_path = os.path.join(shortcuts_dir, desktop_file)
+                dest_path = os.path.join(applications_dir, desktop_file)
 
-        for folder, desktop_file in folder_desktop_map.items():
-            folder_path = os.path.join(affinity_dir, folder)
-            source_path = os.path.join(shortcuts_dir, desktop_file)
-            dest_path = os.path.join(applications_dir, desktop_file)
-
-            if os.path.isdir(folder_path):
-                if os.path.isfile(source_path):
-                    try:
-                        shutil.move(source_path, dest_path)
-                        self.output_buffer.append(_(f"Moved {desktop_file} to {applications_dir}"))
-                        GLib.idle_add(self.append_output_if_visible, _(f"Moved {desktop_file} to {applications_dir}"))
-                    except Exception as e:
-                        error_line = _(f"Failed to move {desktop_file}: {str(e)}")
+                if os.path.isdir(folder_path):
+                    if os.path.isfile(source_path):
+                        try:
+                            shutil.move(source_path, dest_path)
+                            self.output_buffer.append(_(f"Moved {desktop_file} to {applications_dir}"))
+                            GLib.idle_add(self.append_output_if_visible, _(f"Moved {desktop_file} to {applications_dir}"))
+                        except Exception as e:
+                            error_line = _(f"Failed to move {desktop_file}: {str(e)}")
+                            self.output_buffer.append(error_line)
+                            GLib.idle_add(self.append_output_if_visible, error_line)
+                    else:
+                        error_line = _(f"{desktop_file} not found in {shortcuts_dir}")
                         self.output_buffer.append(error_line)
                         GLib.idle_add(self.append_output_if_visible, error_line)
                 else:
-                    error_line = _(f"{desktop_file} not found in {shortcuts_dir}")
-                    self.output_buffer.append(error_line)
-                    GLib.idle_add(self.append_output_if_visible, error_line)
-            else:
-                self.output_buffer.append(_(f"{folder} not found in {affinity_dir}"))
-                GLib.idle_add(self.append_output_if_visible, _(f"{folder} not found in {affinity_dir}"))
+                    self.output_buffer.append(_(f"{folder} not found in {affinity_dir}"))
+                    GLib.idle_add(self.append_output_if_visible, _(f"{folder} not found in {affinity_dir}"))
 
-        self.output_buffer.append(_("Fourth command completed successfully."))
-        GLib.idle_add(self.append_output_if_visible, _("Fourth command completed successfully."))
-
-    except Exception as e:
-        error_line = _("Error: {}").format(str(e))
-        self.output_buffer.append(error_line)
-        GLib.idle_add(self.append_output_if_visible, error_line)
-
-    finally:
-        self.is_running = False
-
-        def finish_update_ui():
-            self.update_button.set_sensitive(True)
-            self.header_bar.set_sensitive(True)
-            self.header_bar.set_visible(True)
-            self.update_warning_visibility()
-
-            self.status_label.set_visible(True)
-            self.text_view.set_visible(False)
-            self.scrolled_window.set_visible(False)
-            self.status_label.set_margin_top(40)
+            # Set return_code to 0 if all commands completed successfully
             if return_code == 0:
-                self.status_label.set_markup('<span foreground="green" size="large">✅ {}</span>'.format(_("Installation completed successfully.")))
-            else:
-                self.status_label.set_markup('<span foreground="red" size="large">❌ {}</span>'.format(_("Installation failed (code {}).").format(return_code)))
+                self.output_buffer.append(_("Fourth command completed successfully."))
+                GLib.idle_add(self.append_output_if_visible, _("Fourth command completed successfully."))
 
-        GLib.idle_add(finish_update_ui)
+        except Exception as e:
+            error_line = _("Error: {}").format(str(e))
+            self.output_buffer.append(error_line)
+            GLib.idle_add(self.append_output_if_visible, error_line)
+            return_code = -1
+        finally:
+            self.is_running = False
+
+            def finish_update_ui():
+                self.update_button.set_sensitive(True)
+                self.header_bar.set_sensitive(True)
+                self.header_bar.set_visible(True)
+                self.update_warning_visibility()
+
+                self.status_label.set_visible(True)
+                self.text_view.set_visible(False)
+                self.scrolled_window.set_visible(False)
+                if return_code == 0:
+                    self.status_label.set_margin_top(40)
+                    self.status_label.set_markup('<span foreground="green" size="large">✅ {}</span>'.format(_("Installation completed successfully.")))
+                else:
+                    self.status_label.set_margin_top(40)
+                    self.status_label.set_markup('<span foreground="red" size="large">❌ {}</span>'.format(_("Installation failed (code {}).").format(return_code)))
+
+            GLib.idle_add(finish_update_ui)
 
     def append_output_if_visible(self, text):
         if self.text_view.get_visible():
