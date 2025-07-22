@@ -56,7 +56,7 @@ There are two ways to properly use it on Arch and Arch-based distros other than 
 <br><br>
 
 ## Troubleshooting:
-- The app is fully written in Python. For some reason sometimes it fails to perform step 2 (executing wine-affinith-config.sh) if the "affinity-installer" is not in the /usr/bin directory. If that happens, you will need to move the script to the /usr/bin/ directory for it to work properly
+- The app is fully written in Python. For some reason sometimes it fails to perform step 2 (executing wine-affinity-config.sh) if the "affinity-installer" is not in the /usr/bin directory. If that happens, you will need to move the script to the /usr/bin/ directory for it to work properly
 - The app requires some dependencies: python-gobject, gtk4, libadwaita, python - Those are required to use the application. Be sure you have them installed if you use it on Arch-based other than Linexin.
 
 
