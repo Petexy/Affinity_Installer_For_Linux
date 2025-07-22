@@ -10,7 +10,7 @@
 1. Download your desired Affinity suite program in .exe format
 4. Run "Affinity Installer" from your Application Launcher
 5. Press "Install Affinity application"
-6. Install all components that will pop up on the screen (.NET Framework)
+6. Install all components that will pop up on the screen (Wine Mono and .NET Framework two times)
 7. Wait and select your downloaded Affinity installer .exe file
 8. Run your program from the Application Launcher
 
@@ -23,11 +23,13 @@
 5. Put it in the $HOME/.local/share/linexin/shortcuts/
 6. Compile custom [Wine Build from ElementalWarrior](https://github.com/daniel080400/AffinityLinuxTut/tree/main?tab=readme-ov-file) by following the instruction from this Git
 7. Copy compiled build to /opt/wines/wine-affinity
-8. Download your desired Affinity suite program in .exe format
-9. Download affinity-installer
-10. Make the affinity-installer file executable
-11. Run program
-12. Press "Install Affinity application"
-13. Install all components that will pop up on the screen 
-14. Wait and select your downloaded Affinity installer .exe file
-15. Run your program from the application launcher
+8. Download WinMetadata from Windows VM (C:\Windows\system32\WinMetadata)
+9. Paste it in $HOME/.WineAffinity/drive_c/windows/system32/WinMetadata
+10. Download your desired Affinity suite program in .exe format
+11. Download affinity-installer
+12. Make the affinity-installer file executable
+13. Run program
+14. Press "Install Affinity application"
+15. Install all components that will pop up on the screen 
+16. Wait and select your downloaded Affinity installer .exe file
+17. Run your program from the application launcher
