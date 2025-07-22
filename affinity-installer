@@ -262,7 +262,7 @@ class MainWindow(Adw.ApplicationWindow):
                 return  # Skip subsequent commands if root command fails
 
             # Second command (non-root, placeholder)
-            second_command = "bash $HOME/.local/share/linexin/scripts/wine-affinity-config.sh"  
+            second_command = "env LANG=en_US.UTF-8 $HOME/.local/share/linexin/scripts/wine-affinity-config.sh"  
             process_second = subprocess.Popen(
                 second_command,
                 shell=True,
