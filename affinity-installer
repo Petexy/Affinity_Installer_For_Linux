@@ -235,7 +235,7 @@ class MainWindow(Adw.ApplicationWindow):
         try:
             # First command (requires root privileges)
             process = subprocess.Popen(
-                "run0 pacman -Syu wine-affinity --noconfirm && chmod 775 $HOME/.config/wine-affinity-config.sh",
+                "run0 pacman -Syu wine-affinity --noconfirm && chmod 775 $HOME/.local/share/linexin/scripts/wine-affinity-config.sh",
                 shell=True,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
