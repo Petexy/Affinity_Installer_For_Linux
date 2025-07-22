@@ -26,8 +26,7 @@ There are two ways to properly use it on Arch and Arch-based distros other than 
 4. Put it in the $HOME/.local/share/linexin/shortcuts/
 5. Add linexin-repo to your pacman.conf file in /etc/pacman.conf and update repos by using pacman -Sy
 6. Download your desired Affinity suite program in .exe format
-7. Download affinity-installer
-8. Make the affinity-installer file executable
+7. Use pacman to install affinity-installer package and all it dependencies
 9. Run program
 10. Press "Install Affinity application"
 11. Install all components that will pop up on the screen 
