@@ -8,17 +8,15 @@
 
 ## How to use (on Linexin):
 1. Download your desired Affinity suite program in .exe format
-2. Download affinity-installer
-3. Make the affinity-installer file executable (Right click -> Properties -> Executable as Program should be checked)
-4. Run program (Right click -> Run as a Program)
+4. Run "Affinity Installer" from your Application Launcher
 5. Press "Install Affinity application"
 6. Install all components that will pop up on the screen (.NET Framework)
 7. Wait and select your downloaded Affinity installer .exe file
-8. Run your program from the application launcher
+8. Run your program from the Application Launcher
 
 
 ## How to use (on Arch-Based):
-1. Download wine-affinity-config.sh script from [Linexin airootfs](https://github.com/Petexy/Linexin/blob/main/airootfs/etc/skel/.config/wine-affinity-config.sh)
+1. Download wine-affinity-config.sh script from [Linexin airootfs](https://github.com/Petexy/Linexin/blob/main/airootfs/etc/skel/.local/share/linexin/scripts/wine-affinity-config.sh))
 2. Put it in the $HOME/.config/
 3. Make it executable
 4. Download desired app shortcut from [Linexin airootfs](https://github.com/Petexy/Linexin/tree/main/airootfs/etc/skel/.local/share/linexin/shortcuts)
