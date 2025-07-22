@@ -93,7 +93,7 @@ msgstr "Root command failed with return code {}."
 
 #: affinity-installer:285 affinity-installer:286
 msgid "Second command completed successfully."
-msgstr "Drugi etap zakończony pomyślnie."
+msgstr "Second command completed successfully."
 
 #: affinity-installer:288
 msgid "Second command failed with return code {}."
@@ -101,7 +101,7 @@ msgstr "Second command failed with return code {}."
 
 #: affinity-installer:323 affinity-installer:324
 msgid "Third command completed successfully."
-msgstr "Trzeci etap zakończony pomyślnie."
+msgstr "Third command completed successfully."
 
 #: affinity-installer:326
 msgid "Third command failed with return code {}."
@@ -109,11 +109,11 @@ msgstr "Third command failed with return code {}."
 
 #: affinity-installer:370 affinity-installer:371
 msgid "Fourth command completed successfully."
-msgstr "Czwarty etap zakończony pomyślnie."
+msgstr "Fourth command completed successfully."
 
 #: affinity-installer:374
 msgid "Error: {}"
-msgstr "Błąd: {}"
+msgstr "Blad: {}"
 
 #: affinity-installer:392
 msgid "Installation completed successfully."
