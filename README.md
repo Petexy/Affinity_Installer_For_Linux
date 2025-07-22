@@ -17,7 +17,7 @@
 
 ## How to use (on Arch-Based):
 1. Download wine-affinity-config.sh script from [Linexin airootfs](https://github.com/Petexy/Linexin/blob/main/airootfs/etc/skel/.local/share/linexin/scripts/wine-affinity-config.sh))
-2. Put it in the $HOME/.config/
+2. Put it in the $HOME/.local/share/linexin/scripts/
 3. Make it executable
 4. Download desired app shortcut from [Linexin airootfs](https://github.com/Petexy/Linexin/tree/main/airootfs/etc/skel/.local/share/linexin/shortcuts)
 5. Put it in the $HOME/.local/share/linexin/shortcuts/
