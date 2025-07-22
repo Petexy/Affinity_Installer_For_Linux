@@ -281,7 +281,7 @@ class MainWindow(Adw.ApplicationWindow):
                     GLib.idle_add(self.append_output_if_visible, line)
 
             second_return_code = process_second.poll()
-            if second_return_code == 0 or second_return_code == -1:
+            if second_return_code == 0:
                 self.output_buffer.append(_("Second command completed successfully."))
                 GLib.idle_add(self.append_output_if_visible, _("Second command completed successfully."))
             else:
