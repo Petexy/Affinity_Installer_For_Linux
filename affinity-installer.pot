@@ -1,0 +1,122 @@
+# SOME DESCRIPTIVE TITLE.
+# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# This file is distributed under the same license as the PACKAGE package.
+# FIRST AUTHOR <piotr.petexiness@gmail.com>, 2025.
+#
+#, fuzzy
+msgid ""
+msgstr ""
+"Project-Id-Version: PACKAGE VERSION\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-07-22 10:08+0200\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+"Language: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=CHARSET\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+#: affinity-installer:40
+msgid "Affinity Installater"
+msgstr ""
+
+#: affinity-installer:86
+msgid "Welcome to Affinity Installer!"
+msgstr ""
+
+#: affinity-installer:87
+msgid ""
+"Please make sure that you have downloaded the Affinity application .exe file "
+"before the installation."
+msgstr ""
+
+#: affinity-installer:104
+msgid "Installation is in progress..."
+msgstr ""
+
+#: affinity-installer:115
+msgid "Do NOT close the app!"
+msgstr ""
+
+#: affinity-installer:116
+msgid ""
+"/n This will take a while. Remember to install .NET when the installer pops "
+"up"
+msgstr ""
+
+#: affinity-installer:151
+msgid "Install Affinity application"
+msgstr ""
+
+#: affinity-installer:157 affinity-installer:178 affinity-installer:190
+msgid "Show progress"
+msgstr ""
+
+#: affinity-installer:194
+msgid "Hide progress"
+msgstr ""
+
+#: affinity-installer:205
+msgid "Select Installer File"
+msgstr ""
+
+#: affinity-installer:209
+msgid "Cancel"
+msgstr ""
+
+#: affinity-installer:210
+msgid "Open"
+msgstr ""
+
+#: affinity-installer:213
+msgid "Executable Files"
+msgstr ""
+
+#: affinity-installer:220 affinity-installer:221
+msgid "Selected file: {}"
+msgstr ""
+
+#: affinity-installer:224 affinity-installer:225
+msgid "No file selected for installer."
+msgstr ""
+
+#: affinity-installer:256 affinity-installer:257
+msgid "Root command completed successfully."
+msgstr ""
+
+#: affinity-installer:259
+msgid "Root command failed with return code {}."
+msgstr ""
+
+#: affinity-installer:285 affinity-installer:286
+msgid "Second command completed successfully."
+msgstr ""
+
+#: affinity-installer:288
+msgid "Second command failed with return code {}."
+msgstr ""
+
+#: affinity-installer:323 affinity-installer:324
+msgid "Third command completed successfully."
+msgstr ""
+
+#: affinity-installer:326
+msgid "Third command failed with return code {}."
+msgstr ""
+
+#: affinity-installer:370 affinity-installer:371
+msgid "Fourth command completed successfully."
+msgstr ""
+
+#: affinity-installer:374
+msgid "Error: {}"
+msgstr ""
+
+#: affinity-installer:392
+msgid "Update completed successfully."
+msgstr ""
+
+#: affinity-installer:395
+msgid "Update failed (code {})."
+msgstr ""
