@@ -7,6 +7,8 @@
 - Every Arch-based distro
 
 ## How to use (on Linexin):
+The app is already pre-installed on your distro.
+
 1. Download your desired Affinity suite program in .exe format
 4. Run "Affinity Installer" from your Application Launcher
 5. Press "Install Affinity application"
