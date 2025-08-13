@@ -7,38 +7,54 @@ import gettext
 import locale
 import os
 import shutil
+import shlex
 
 gi.require_version("Gtk", "4.0")
 gi.require_version("Adw", "1")
 from gi.repository import Gtk, Adw, GLib, Gdk
 
-# Set up internationalization (i18n)
-LOCALEDIR = "/usr/share/locale"
-DOMAIN = "affinity-installer"
+# --- Localization Setup ---
+APP_NAME = "affinity-installer"
+LOCALE_DIR = "/usr/share/locale" 
 
-def setup_gettext():
-    try:
-        locale.setlocale(locale.LC_ALL, '')
-        lang, encoding = locale.getlocale()
-        if lang is None:
-            lang = 'en'
-    except locale.Error:
+# Set up the locale environment
+try:
+    locale.setlocale(locale.LC_ALL, '')
+    lang, _ = locale.getlocale()
+    if lang is None:
         lang = 'en'
+except locale.Error:
+    lang = 'en'
 
-    gettext.bindtextdomain(DOMAIN, LOCALEDIR)
-    gettext.textdomain(DOMAIN)
-    translation = gettext.translation(DOMAIN, LOCALEDIR, languages=[lang], fallback=True)
-    translation.install()
-
-setup_gettext()
+gettext.bindtextdomain(APP_NAME, LOCALE_DIR)
+gettext.textdomain(APP_NAME)
+translation = gettext.translation(APP_NAME, LOCALE_DIR, languages=[lang], fallback=True)
+translation.install()
 _ = gettext.gettext
+# --------------------------
+
 
 class MainWindow(Adw.ApplicationWindow):
     def __init__(self, app):
         super().__init__(application=app)
-        self.set_default_size(500, 250)
-        self.set_title(_("Affinity Installater"))
-        
+        # App info and reset of potentially lost data
+        self.set_title(_("Affinity Installer"))
+        self.set_default_size(900, 300)
+        self.progress_visible = False
+        self.progress_data = ""
+        self.install_started = False
+        self.error_message = None
+        self.current_product = "Affinity"
+
+        # Main vertical box to hold header bar and content
+        main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
+        self.set_content(main_box)
+
+        # Add Adwaita header bar
+        self.header_bar = Adw.HeaderBar()
+        self.header_bar.set_title_widget(Adw.WindowTitle.new("", ""))
+        main_box.append(self.header_bar)
+
         css_provider = Gtk.CssProvider()
         css = """
         headerbar {
@@ -49,12 +65,6 @@ class MainWindow(Adw.ApplicationWindow):
         .titlebar {
             background-color: transparent;
         }
-        .linexin-app-buttons {
-            font-size: 16px;
-            padding: 10px 20px; 
-            min-width: 150px;
-            min-height: 40px; 
-        }
         """
         css_provider.load_from_data(css.encode())
         Gtk.StyleContext.add_provider_for_display(
@@ -63,115 +73,95 @@ class MainWindow(Adw.ApplicationWindow):
             Gtk.STYLE_PROVIDER_PRIORITY_APPLICATION
         )
 
-        self.output_buffer = []
-        self.is_running = False
-        self.selected_file = None
-        self.file_chooser_event = None
+        # Main horizontal box for content
+        hbox = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=20,
+                       margin_top=20, margin_bottom=20, margin_start=20, margin_end=20)
+        main_box.append(hbox)
 
-        main_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
-        self.header_bar = Adw.HeaderBar()
-        self.header_bar.set_show_end_title_buttons(True)
-        main_box.append(self.header_bar)
+        # Left vertical button group
+        button_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=12)
+        hbox.append(button_box)
 
-        content_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=6)
-        content_box.set_margin_top(12)
-        content_box.set_margin_bottom(12)
-        content_box.set_margin_start(12)
-        content_box.set_margin_end(12)
-        content_box.set_vexpand(True)
+        # A single button to start the installation process
+        self.btn_install = Gtk.Button(label=_("Select Installer File"))
+        self.btn_toggle_progress = Gtk.Button(label=_("Show progress"), sensitive=False)
 
-        self.welcome_label = Gtk.Label()
-        self.welcome_label.set_markup(
-            '<span size="large" weight="bold">{}</span>\n\n{}'.format(
-                _("Welcome to Affinity Installer!"),
-                _("Please make sure that you have downloaded the Affinity application .exe file before the installation.")
-            )
-        )
-        self.welcome_label.set_justify(Gtk.Justification.CENTER)
-        self.welcome_label.set_halign(Gtk.Align.CENTER)
-        self.welcome_label.set_valign(Gtk.Align.CENTER)
-        self.welcome_label.set_wrap(True)
-        self.welcome_label.set_margin_top(20)
-        self.welcome_label.set_margin_bottom(20)
-        content_box.append(self.welcome_label)
+        self.btn_install.set_margin_start(12)
+        self.btn_install.set_margin_end(12)
+        self.btn_install.set_vexpand(True)
+        self.btn_install.add_css_class("suggested-action")
 
-        self.warning_box = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=0)
-        self.warning_box.set_halign(Gtk.Align.CENTER)
-        self.warning_box.set_valign(Gtk.Align.CENTER)
-        self.warning_box.set_visible(False)
-        content_box.append(self.warning_box)
-        
-        self.warning_label_line1 = Gtk.Label(label=_("Installation is in progress..."))
-        self.warning_label_line1.set_margin_top(50)
-        self.warning_label_line1.set_halign(Gtk.Align.CENTER)
-        self.warning_label_line1.set_valign(Gtk.Align.CENTER)
-        self.warning_box.append(self.warning_label_line1)
+        self.btn_toggle_progress.set_margin_bottom(12)
+        self.btn_toggle_progress.set_margin_start(12)
+        self.btn_toggle_progress.set_margin_end(12)
+        self.btn_toggle_progress.set_vexpand(True)
 
-        self.warning_label_line2 = Gtk.Label()
-        self.warning_label_line2.set_halign(Gtk.Align.CENTER)
-        self.warning_label_line2.set_valign(Gtk.Align.CENTER)
-        self.warning_label_line2.set_markup(
-            '<span foreground="red" weight="bold" size="large">{}</span>'.format(
-                _("Do NOT close the app!"),
-                _("/n This will take a while. Remember to install .NET when the installer pops up")
-            )
-        )
-        self.warning_box.append(self.warning_label_line2)
+        self.btn_install.connect("clicked", self.on_install_clicked)
+        self.btn_toggle_progress.connect("clicked", self.on_toggle_progress_clicked)
 
-        self.status_label = Gtk.Label()
-        self.status_label.set_halign(Gtk.Align.CENTER)
-        self.status_label.set_valign(Gtk.Align.CENTER)
-        self.status_label.set_visible(False)
-        content_box.append(self.status_label)
+        button_box.append(self.btn_install)
+        button_box.append(self.btn_toggle_progress)
 
-        self.text_view = Gtk.TextView()
-        self.text_view.set_editable(False)
-        self.text_view.set_monospace(True)
-        self.text_view.set_visible(False)
+        # Right side: output or instructions
+        self.output_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL)
+        hbox.append(self.output_box)
 
-        scrolled_window = Gtk.ScrolledWindow()
-        scrolled_window.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
-        scrolled_window.set_child(self.text_view)
-        scrolled_window.set_vexpand(True)
-        scrolled_window.set_hexpand(True)
-        scrolled_window.set_visible(False)
+        self.info_label = Gtk.Label()
+        self.set_welcome_message()
+        self.info_label.set_vexpand(True)
+        self.info_label.set_hexpand(True)
+        self.info_label.set_wrap(True)
+        self.output_box.append(self.info_label)
 
-        self.scrolled_window = scrolled_window
-        content_box.append(self.scrolled_window)
+        # Output text view inside a scrolled window within a frame
+        self.output_buffer = Gtk.TextBuffer()
+        self.output_textview = Gtk.TextView.new_with_buffer(self.output_buffer)
+        self.output_textview.set_wrap_mode(Gtk.WrapMode.WORD)
+        self.output_textview.set_editable(False)
+        self.output_textview.set_cursor_visible(False)
+        self.output_textview.set_monospace(True)
+        self.output_textview.set_left_margin(10)
+        self.output_textview.set_right_margin(10)
+        self.output_textview.set_top_margin(5)
+        self.output_textview.set_bottom_margin(5)
 
-        spacer = Gtk.Box()
-        spacer.set_vexpand(True)
-        content_box.append(spacer)
+        # Create a scrolled window
+        self.scrolled_window = Gtk.ScrolledWindow()
+        self.scrolled_window.set_policy(Gtk.PolicyType.AUTOMATIC, Gtk.PolicyType.AUTOMATIC)
+        self.scrolled_window.set_child(self.output_textview)
+        self.scrolled_window.set_hexpand(True)
+        self.scrolled_window.set_vexpand(True)
 
-        button_box = Gtk.Box(orientation=Gtk.Orientation.HORIZONTAL, spacing=6)
-        button_box.set_halign(Gtk.Align.CENTER)
-        button_box.set_hexpand(True)
-        content_box.append(button_box)
+        self.output_frame = Gtk.Frame()
+        self.output_frame.set_child(self.scrolled_window)
+        self.output_frame.set_hexpand(True)
+        self.output_frame.set_vexpand(True)
+        self.output_frame.set_visible(False)
 
-        self.update_button = Gtk.Button(label=_("Install Affinity application"))
-        self.update_button.add_css_class("suggested-action")
-        self.update_button.add_css_class("linexin-app-buttons")
-        self.update_button.connect("clicked", self.on_update_button_clicked)
-        button_box.append(self.update_button)
+        self.output_box.append(self.output_frame)
 
-        self.show_progress_button = Gtk.Button(label=_("Show progress"))
-        self.show_progress_button.set_sensitive(False)
-        self.show_progress_button.connect("clicked", self.on_toggle_progress_clicked)
-        button_box.append(self.show_progress_button)
+                # Info label (default message or in-progress/completion info)
+        image_path = "/usr/share/icons/github.petexy.affinityinstaller.png"
+        self.welcome_image = Gtk.Image()
+        if os.path.exists(image_path):
+            self.welcome_image.set_from_file(image_path)
+        else:
+            self.welcome_image.set_from_icon_name("view-refresh")
+        self.welcome_image.set_pixel_size(125)
+        self.welcome_image.set_margin_end(20)
+        self.welcome_image.set_margin_start(40)
+        self.output_box.append(self.welcome_image)
 
-        main_box.append(content_box)
-        self.set_content(main_box)
-
-
+        # Connect to the close-request signal to prevent closing during installation
         self.connect("close-request", self.on_close_request)
 
     def on_close_request(self, *args):
         # Handle the close-request signal to prevent closing during installation
-        if self.is_running:
+        if self.install_started:
             # Show a notification or dialog to inform the user
             dialog = Adw.MessageDialog(
                 heading=_("Installation in Progress"),
-                body=_("Please wait until the installation is complete before closing the application!"),
+                body=_("Please wait until the installation is complete before closing the application."),
                 transient_for=self,
                 modal=True
             )
@@ -182,264 +172,230 @@ class MainWindow(Adw.ApplicationWindow):
             return True  # Prevents the window from closing
         return False  # Allows the window to close
 
+    def set_welcome_message(self):
+        self.info_label.set_margin_top(-15)
+        self.info_label.set_markup(
+            '<span size="large" weight="bold">{}</span>\n\n{}'.format(
+                _("Welcome to Affinity Installer!"),
+                _("The app is created to help you with the installation of the Affinity suite for Linux.\nPlease make sure that you have downloaded the Affinity application .exe file before the installation.")
+            )
+        )
 
-    def on_update_button_clicked(self, button):
-        self.update_button.set_sensitive(False)
-        self.show_progress_button.set_sensitive(True)
+    def on_install_clicked(self, button):
+        # Starts the file selection process
+        self.create_file_chooser()
+
+    def create_file_chooser(self):
+        """Creates and shows a file chooser dialog."""
+        title = _("Select Affinity .exe file")
+        file_chooser = Gtk.FileChooserDialog(
+            title=title,
+            transient_for=self,
+            modal=True,
+            action=Gtk.FileChooserAction.OPEN
+        )
+        
+        file_chooser.add_button(_("Cancel"), Gtk.ResponseType.CANCEL)
+        file_chooser.add_button(_("Open"), Gtk.ResponseType.OK)
+        
+        file_filter = Gtk.FileFilter()
+        file_filter.set_name(_("Affinity Installer (*.exe)"))
+        file_filter.add_pattern("*.exe")
+        file_chooser.add_filter(file_filter)
+        
+        # Connect the response signal
+        file_chooser.connect("response", self.on_file_chooser_response)
+        file_chooser.present()
+
+    def on_file_chooser_response(self, dialog, response_id):
+        """Handles file selection and starts the installation."""
+        if response_id == Gtk.ResponseType.OK:
+            file = dialog.get_file()
+            if file:
+                exe_file_path = file.get_path()
+                self.begin_install(exe_file_path)
+            else:
+                self.show_error_message(_("No file selected. Installation cancelled."))
+        else:
+            self.show_error_message(_("Installation cancelled."))
+        
+        dialog.destroy()
+
+    def show_error_message(self, message):
+        self.info_label.set_markup(
+            f'<span color="red" weight="bold">{message}</span>'
+        )
+        self.info_label.set_visible(True)
+
+    def begin_install(self, exe_path):
+        self.install_started = True
         self.header_bar.set_sensitive(False)
-        self.header_bar.set_visible(False)
+        self.header_bar.set_opacity(0.5)
+        self.btn_install.set_sensitive(False)
+        self.btn_toggle_progress.set_sensitive(True)
+        self.error_message = None
 
-        self.output_buffer.clear()
-        self.text_view.get_buffer().set_text("")
-        self.selected_file = None
-        self.file_chooser_event = None
+        self.info_label.set_label().format(self.current_product).set_markup(f'<span size=xx-large weight="bold">{_("Installing {}... This may take a while...").format(self.current_product)}</span>')
+        self.output_frame.set_visible(False)
+        self.info_label.set_visible(True)
+        self.progress_data = ""
+        self.progress_visible = False
+        self.btn_toggle_progress.set_label(_("Show progress"))
+        self.output_buffer.set_text("")
 
-        self.text_view.set_visible(False)
-        self.scrolled_window.set_visible(False)
-        self.show_progress_button.set_label(_("Show progress"))
-        self.show_progress_button.add_css_class("linexin-app-buttons")
-        self.status_label.set_visible(False)
-        self.is_running = True
-        self.update_warning_visibility()
-
-        threading.Thread(target=self.run_update_command, daemon=True).start()
+        self.run_installation_flow(exe_path)
 
     def on_toggle_progress_clicked(self, button):
-        if self.text_view.get_visible():
-            self.text_view.set_visible(False)
-            self.scrolled_window.set_visible(False)
-            self.show_progress_button.set_label(_("Show progress"))
+        self.progress_visible = not self.progress_visible
+
+        if self.progress_visible:
+            self.btn_toggle_progress.set_label(_("Hide progress"))
+            self.output_buffer.set_text(self.progress_data or _("[console output]"))
+            self.output_frame.set_visible(True)
+            self.info_label.set_visible(False)
+            GLib.idle_add(self.scroll_to_end)
         else:
-            self.text_view.set_visible(True)
-            self.scrolled_window.set_visible(True)
-            self.show_progress_button.set_label(_("Hide progress"))
-            buffer = self.text_view.get_buffer()
-            buffer.set_text("\n".join(self.output_buffer))
-            end_iter = buffer.get_end_iter()
-            self.text_view.scroll_to_iter(end_iter, 0.0, False, 0.0, 0.0)
+            self.btn_toggle_progress.set_label(_("Show progress"))
+            self.output_frame.set_visible(False)
+            self.info_label.set_label(_("Installing {}...").format(self.current_product))
+            self.info_label.set_visible(True)
 
-        self.update_warning_visibility()
+    def run_installation_flow(self, exe_path):
+        def stream_output():
+            try:
+                # Helper to run a non-interactive command and stream its output for the log
+                def run_and_log(command, fail_msg):
+                    process = subprocess.Popen(
+                        command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT,
+                        text=True, encoding='utf-8', errors='replace'
+                    )
+                    for line in iter(process.stdout.readline, ''):
+                        if line:
+                            self.progress_data += line
+                            GLib.idle_add(self.update_output_buffer, self.progress_data)
+                    process.stdout.close()
+                    return_code = process.wait()
+                    if return_code != 0:
+                        raise subprocess.CalledProcessError(return_code, command, output=fail_msg)
+                    return True
 
-    def show_file_chooser(self):
-        """Show a file chooser dialog and set the selected file path."""
-        dialog = Gtk.FileChooserDialog(
-            title=_("Select Installer File"),
-            transient_for=self,
-            action=Gtk.FileChooserAction.OPEN,
-        )
-        dialog.add_button(_("Cancel"), Gtk.ResponseType.CANCEL)
-        dialog.add_button(_("Open"), Gtk.ResponseType.OK)
+                # --- 1. Pacman Command ---
+                self.progress_data += _("Step 1: Updating and installing wine-affinity...\n\n")
+                GLib.idle_add(self.update_output_buffer, self.progress_data)
+                pacman_cmd = "run0 pacman -Syu wine-affinity --noconfirm && chmod 775 $HOME/.local/share/linexin/scripts/wine-affinity-config.sh"
+                run_and_log(pacman_cmd, _("Failed to install wine-affinity."))
 
-        file_filter = Gtk.FileFilter()
-        file_filter.set_name(_("Affinity .exe file"))
-        file_filter.add_pattern("*.exe")
-        dialog.add_filter(file_filter)
+                # --- 2. Wine Config Script (Interactive) ---
+                self.progress_data += _("\nStep 2: Configuring Wine environment...\n")
+                self.progress_data += _("This step will run 'winetricks' and may open new windows. Please follow any on-screen instructions.\n")
+                self.progress_data += _("The installer will continue automatically after this step is complete.\n\n")
+                GLib.idle_add(self.update_output_buffer, self.progress_data)
 
-        def on_response(dialog, response_id):
-            if response_id == Gtk.ResponseType.OK:
-                self.selected_file = dialog.get_file().get_path()
-                self.output_buffer.append(_("Selected file: {}").format(self.selected_file))
-                GLib.idle_add(self.append_output_if_visible, _("Selected file: {}").format(self.selected_file))
-            else:
-                self.selected_file = None
-                self.output_buffer.append(_("No file selected for installer."))
-                GLib.idle_add(self.append_output_if_visible, _("No file selected for installer."))
-            dialog.destroy()
-            self.file_chooser_event.set()
+                config_script_path = os.path.expanduser("~/.local/share/linexin/scripts/wine-affinity-config.sh")
+                
+                # Run the interactive script, automatically answering "Y" to any initial prompts.
+                # This allows the script to run freely and open its own GUI windows.
+                config_process = subprocess.Popen(
+                    config_script_path, shell=True, stdin=subprocess.PIPE, text=True
+                )
+                # The communicate() method sends the input, closes stdin, and waits for the process to finish.
+                config_process.communicate(input='Y\n')
 
-        dialog.connect("response", on_response)
-        dialog.present()
+                if config_process.returncode != 0:
+                    raise Exception(_("The Wine configuration script failed with exit code {}.").format(config_process.returncode))
 
-    def run_update_command(self):
-        return_code = -1
-        self.welcome_label.set_visible(False)
-        try:
-            # First command (requires root privileges)
-            process = subprocess.Popen(
-                "run0 pacman -Syu wine-affinity --noconfirm && chmod 775 $HOME/.local/share/linexin/scripts/wine-affinity-config.sh",
-                shell=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True
-            )
+                self.progress_data += _("Wine configuration complete.\n")
+                GLib.idle_add(self.update_output_buffer, self.progress_data)
+                
+                # --- 3. Run Affinity Installer via Wine ---
+                self.progress_data += _("\nStep 3: Running the Affinity installer. Please follow the on-screen instructions...\n\n")
+                self.progress_data += _("Remember to install .NET if the installer prompts you.\n\n")
+                GLib.idle_add(self.update_output_buffer, self.progress_data)
+                wine_cmd = f'rum wine-affinity "{os.path.expanduser("~/.WineAffinity")}" wine "{exe_path}"'
+                run_and_log(wine_cmd, _("The Affinity installer did not complete successfully."))
 
-            while True:
-                output = process.stdout.readline()
-                if output == "" and process.poll() is not None:
-                    break
-                if output:
-                    line = output.strip()
-                    self.output_buffer.append(line)
-                    GLib.idle_add(self.append_output_if_visible, line)
+                # --- 4. Move Desktop Files ---
+                self.progress_data += _("\nStep 4: Creating application shortcuts...\n\n")
+                GLib.idle_add(self.update_output_buffer, self.progress_data)
+                
+                affinity_dir = os.path.expanduser("~/.WineAffinity/drive_c/Program Files/Affinity")
+                shortcuts_dir = os.path.expanduser("~/.local/share/linexin/shortcuts")
+                applications_dir = os.path.expanduser("~/.local/share/applications")
+                folder_desktop_map = {
+                    "Photo 2": "photo-2.desktop",
+                    "Designer 2": "designer-2.desktop",
+                    "Publisher 2": "publisher-2.desktop"
+                }
 
-            return_code = process.poll()
-            if return_code == 0:
-                self.output_buffer.append(_("Root command completed successfully."))
-                GLib.idle_add(self.append_output_if_visible, _("Root command completed successfully."))
-            else:
-                error_line = _("Root command failed with return code {}.").format(return_code)
-                self.output_buffer.append(error_line)
-                GLib.idle_add(self.append_output_if_visible, error_line)
-                return  # Skip subsequent commands if root command fails
-
-            # Second command (non-root, placeholder)
-            second_command = "env LANG=en_US.UTF-8 $HOME/.local/share/linexin/scripts/wine-affinity-config.sh"  
-            process_second = subprocess.Popen(
-                second_command,
-                shell=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True
-            )
-
-            while True:
-                output = process_second.stdout.readline()
-                if output == "" and process_second.poll() is not None:
-                    break
-                if output:
-                    line = output.strip()
-                    self.output_buffer.append(line)
-                    GLib.idle_add(self.append_output_if_visible, line)
-
-            second_return_code = process_second.poll()
-            if second_return_code == 0:
-                self.output_buffer.append(_("Second command completed successfully."))
-                GLib.idle_add(self.append_output_if_visible, _("Second command completed successfully."))
-            else:
-                error_line = _("Second command failed with return code {}.").format(second_return_code)
-                self.output_buffer.append(error_line)
-                GLib.idle_add(self.append_output_if_visible, error_line)
-                return  # Skip subsequent commands if second command fails
-
-            # Show file chooser dialog for third command
-            self.file_chooser_event = threading.Event()
-            GLib.idle_add(self.show_file_chooser)
-            self.file_chooser_event.wait()
-
-            if self.selected_file is None:
-                return_code = -1
-                return  # Skip subsequent commands if no file is selected
-
-            # Third command (non-root)
-            third_command = f'rum wine-affinity "{os.path.expanduser("~/.WineAffinity")}" wine "{self.selected_file}"'
-            process_third = subprocess.Popen(
-                third_command,
-                shell=True,
-                stdout=subprocess.PIPE,
-                stderr=subprocess.STDOUT,
-                text=True
-            )
-
-            while True:
-                output = process_third.stdout.readline()
-                if output == "" and process_third.poll() is not None:
-                    break
-                if output:
-                    line = output.strip()
-                    self.output_buffer.append(line)
-                    GLib.idle_add(self.append_output_if_visible, line)
-
-            third_return_code = process_third.poll()
-            if third_return_code == 0:
-                self.output_buffer.append(_("Third command completed successfully."))
-                GLib.idle_add(self.append_output_if_visible, _("Third command completed successfully."))
-            else:
-                error_line = _("Third command failed with return code {}.").format(third_return_code)
-                self.output_buffer.append(error_line)
-                GLib.idle_add(self.append_output_if_visible, error_line)
-                return_code = third_return_code  # Update return_code to reflect failure
-                return  # Skip fourth command if third command fails
-
-            # Fourth command: Check for folders and move .desktop files
-            affinity_dir = os.path.expanduser("~/.WineAffinity/drive_c/Program Files/Affinity")
-            shortcuts_dir = os.path.expanduser("~/.local/share/linexin/shortcuts")
-            applications_dir = os.path.expanduser("~/.local/share/applications")
-            folder_desktop_map = {
-                "Photo 2": "photo-2.desktop",
-                "Designer 2": "designer-2.desktop",
-                "Publisher 2": "publisher-2.desktop" 
-            }
-
-            # Ensure applications directory exists
-            os.makedirs(applications_dir, exist_ok=True)
-
-            for folder, desktop_file in folder_desktop_map.items():
-                folder_path = os.path.join(affinity_dir, folder)
-                source_path = os.path.join(shortcuts_dir, desktop_file)
-                dest_path = os.path.join(applications_dir, desktop_file)
-
-                if os.path.isdir(folder_path):
-                    if os.path.isfile(source_path):
-                        try:
+                os.makedirs(applications_dir, exist_ok=True)
+                apps_found = False
+                for folder, desktop_file in folder_desktop_map.items():
+                    if os.path.isdir(os.path.join(affinity_dir, folder)):
+                        apps_found = True
+                        source_path = os.path.join(shortcuts_dir, desktop_file)
+                        dest_path = os.path.join(applications_dir, desktop_file)
+                        if os.path.isfile(source_path):
                             shutil.move(source_path, dest_path)
-                            self.output_buffer.append(_(f"Moved {desktop_file} to {applications_dir}"))
-                            GLib.idle_add(self.append_output_if_visible, _(f"Moved {desktop_file} to {applications_dir}"))
-                        except Exception as e:
-                            error_line = _(f"Failed to move {desktop_file}: {str(e)}")
-                            self.output_buffer.append(error_line)
-                            GLib.idle_add(self.append_output_if_visible, error_line)
-                    else:
-                        error_line = _(f"{desktop_file} not found in {shortcuts_dir}")
-                        self.output_buffer.append(error_line)
-                        GLib.idle_add(self.append_output_if_visible, error_line)
-                else:
-                    self.output_buffer.append(_(f"{folder} not found in {affinity_dir}"))
-                    GLib.idle_add(self.append_output_if_visible, _(f"{folder} not found in {affinity_dir}"))
+                            log_msg = _("Moved {} to {}\n").format(desktop_file, applications_dir)
+                            self.progress_data += log_msg
+                            GLib.idle_add(self.update_output_buffer, self.progress_data)
+                        else:
+                            log_msg = _("Warning: Desktop shortcut {} not found in {}\n").format(desktop_file, shortcuts_dir)
+                            self.progress_data += log_msg
+                            GLib.idle_add(self.update_output_buffer, self.progress_data)
+                
+                if not apps_found:
+                    self.progress_data += _("Warning: No Affinity application folders found to create shortcuts.\n")
+                    GLib.idle_add(self.update_output_buffer, self.progress_data)
 
-            # Set return_code to 0 if all commands completed successfully
-            if return_code == 0:
-                self.output_buffer.append(_("Fourth command completed successfully."))
-                GLib.idle_add(self.append_output_if_visible, _("Fourth command completed successfully."))
+            except Exception as e:
+                self.error_message = str(e)
+                self.progress_data += _("\nError: {}").format(e)
+                GLib.idle_add(self.update_output_buffer, self.progress_data)
 
-        except Exception as e:
-            error_line = _("Error: {}").format(str(e))
-            self.output_buffer.append(error_line)
-            GLib.idle_add(self.append_output_if_visible, error_line)
-            return_code = -1
-        finally:
-            self.is_running = False
+            GLib.idle_add(self.finish_installation)
 
-            def finish_update_ui():
-                self.update_button.set_sensitive(True)
-                self.header_bar.set_sensitive(True)
-                self.header_bar.set_visible(True)
-                self.update_warning_visibility()
+        threading.Thread(target=stream_output, daemon=True).start()
 
-                self.status_label.set_visible(True)
-                self.text_view.set_visible(False)
-                self.scrolled_window.set_visible(False)
-                if return_code == 0:
-                    self.status_label.set_margin_top(40)
-                    self.status_label.set_markup('<span foreground="green" size="large">✅ {}</span>'.format(_("Installation completed successfully.")))
-                else:
-                    self.status_label.set_margin_top(40)
-                    self.status_label.set_markup('<span foreground="red" size="large">❌ {}</span>'.format(_("Installation failed (code {}).").format(return_code)))
+    def update_output_buffer(self, text):
+        if self.progress_visible:
+            self.output_buffer.set_text(text)
+            GLib.idle_add(self.scroll_to_end)
+        return False
 
-            GLib.idle_add(finish_update_ui)
+    def scroll_to_end(self):
+        end_iter = self.output_buffer.get_end_iter()
+        self.output_textview.scroll_to_iter(end_iter, 0.0, False, 0.0, 0.0)
+        return False
 
-    def append_output_if_visible(self, text):
-        if self.text_view.get_visible():
-            buffer = self.text_view.get_buffer()
-            end_iter = buffer.get_end_iter()
-            buffer.insert(end_iter, text + "\n")
-            self.text_view.scroll_to_iter(end_iter, 0.0, False, 0.0, 0.0)
+    def finish_installation(self):
+        self.install_started = False
+        self.header_bar.set_sensitive(True)
+        self.header_bar.set_opacity(1)
+        self.btn_install.set_sensitive(True)
+        self.btn_toggle_progress.set_sensitive(True)
+        
+        if self.error_message:
+            self.info_label.set_markup(f'<span color="red" weight="bold">{_("Installation failed: {}").format(self.error_message)}</span>')
+        else:
+            self.info_label.set_markup(f'<span color="green" weight="bold">{_("Successfully installed {}!").format(self.current_product)}</span>')
+        
+        self.info_label.set_visible(True)
+        self.output_frame.set_visible(False)
+        self.progress_visible = False
+        self.btn_toggle_progress.set_label(_("Show progress"))
+        
+        return False
 
-    def update_warning_visibility(self):
-        should_show = self.is_running and not self.text_view.get_visible()
-        self.warning_box.set_visible(should_show)
-
-class MyApp(Adw.Application):
+class AffinityApp(Adw.Application):
     def __init__(self):
         super().__init__(application_id="github.petexy.affinityinstaller")
-        self.connect("activate", self.on_activate)
 
-    def on_activate(self, app):
-        window = MainWindow(self)
-        window.present()
-
-def main():
-    app = MyApp()
-    app.run()
+    def do_activate(self):
+        win = MainWindow(self)
+        win.present()
 
 if __name__ == "__main__":
-    main()
+    import sys
+    app = AffinityApp()
+    sys.exit(app.run())
