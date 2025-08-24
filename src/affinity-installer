@@ -177,7 +177,7 @@ class MainWindow(Adw.ApplicationWindow):
         self.info_label.set_markup(
             '<span size="large" weight="bold">{}</span>\n\n{}'.format(
                 _("Welcome to Affinity Installer!"),
-                _("The app is created to help you with the installation of the Affinity suite for Linux.\nPlease make sure that you have downloaded the Affinity application .exe file before the installation.")
+                _("The app is created to help you with the installation of the Affinity suite (V2) for Linux.\nPlease make sure that you have downloaded the Affinity application .exe file before the installation.")
             )
         )
 
@@ -292,7 +292,7 @@ class MainWindow(Adw.ApplicationWindow):
                 # --- 1. Pacman Command ---
                 self.progress_data += _("Step 1: Updating and installing wine-affinity...\n\n")
                 GLib.idle_add(self.update_output_buffer, self.progress_data)
-                pacman_cmd = "run0 pacman -Syu wine-affinity --noconfirm && chmod 775 $HOME/.local/share/linexin/scripts/wine-affinity-config.sh"
+                pacman_cmd = "run0 pacman -Sy wine-affinity --noconfirm && chmod 775 $HOME/.local/share/linexin/scripts/wine-affinity-config.sh"
                 run_and_log(pacman_cmd, _("Failed to install wine-affinity."))
 
                 # --- 2. Wine Config Script (Interactive) ---
