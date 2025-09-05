@@ -1,7 +1,7 @@
 # Maintainer: Petexy <https://github.com/Petexy>
 
 pkgname=affinity-installer
-pkgver=2.0.3.r
+pkgver=3.0.0.r
 pkgrel=1
 _currentdate=$(date +"%Y-%m-%d%H-%M-%S")
 pkgdesc='Smart Installer for Affinity suite for Linux'
@@ -13,15 +13,15 @@ depends=(
   gtk4
   libadwaita
   python
+  linexin-center
 )
 makedepends=(
 )
 
 package() {
+   mkdir -p ${pkgdir}/usr/share/linexin/widgets
    mkdir -p ${pkgdir}/usr/bin
-   cp -rf ${pkgname} ${pkgdir}/usr/bin/${pkgname}
-   mkdir -p ${pkgdir}/usr/share/locale
-   cp -rf ${srcdir}/locale ${pkgdir}/usr/share/
-   cp -rf ${srcdir}/icons ${pkgdir}/usr/share/
-   cp -rf ${srcdir}/applications ${pkgdir}/usr/share/
+   mkdir -p ${pkgdir}/usr/applications
+   mkdir -p ${pkgdir}/usr/icons   
+   cp -rf ${srcdir}/usr/ ${pkgdir}/
 }
