@@ -3,12 +3,12 @@
 pkgname = affinity-installer
 pkgbase = affinity-installer
 xdata = pkgtype=pkg
-pkgver = 3.0.0.r-1
+pkgver = 4.0.0.r-1
 pkgdesc = Smart Installer for Affinity suite for Linux
 url = https://github.com/Petexy
-builddate = 1757276878
+builddate = 1765321953
 packager = Unknown Packager
-size = 893178
+size = 573829
 arch = x86_64
 license = GPL-3.0
 depend = python-gobject

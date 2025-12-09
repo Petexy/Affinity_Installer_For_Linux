@@ -114,7 +114,7 @@ class AffinityInstallerWidget(Gtk.Box):
         
         # Description
         description = Gtk.Label()
-        description.set_markup(_("Install the Affinity suite (V2) for Linux\n\nSupports Affinity Photo 2, Designer 2, and Publisher 2"))
+        description.set_markup(_("Install the Affinity suite for Linux\n\nSupports Affinity Photo 2, Designer 2, Publisher 2 and Affinity (2025)"))
         description.set_justify(Gtk.Justification.CENTER)
         description.add_css_class("dim-label")
         welcome_box.append(description)
@@ -340,7 +340,8 @@ class AffinityInstallerWidget(Gtk.Box):
                 folder_desktop_map = {
                     "Photo 2": "photo-2.desktop",
                     "Designer 2": "designer-2.desktop",
-                    "Publisher 2": "publisher-2.desktop"
+                    "Publisher 2": "publisher-2.desktop",
+                    "Affinity": "affinity.desktop"
                 }
 
                 os.makedirs(applications_dir, exist_ok=True)
