@@ -1,11 +1,11 @@
 [Desktop Entry]
-Name=Affinity
-GenericName=Affinity on Wine
+Name=Publisher 2
+GenericName=Publisher on Wine
 Comment=
-Exec=sh -c /usr/bin/affinity
+Exec=sh -c /usr/bin/publisher2
 # Change the rum [version] and the [USER] paths to the right directory
 
-Icon=/usr/share/icons/affinity.png
+Icon=/usr/share/icons/publisher.png
 # Get any png or svg of the logo to add it here; To use your current icon-pack simply use the icon's name without the file extension, eg. 'affinity-publisher-2'
 
 Categories=Graphics
@@ -21,6 +21,6 @@ NoDisplay=false
 StartupNotify=true
 Terminal=false
 Type=Application
-StartupWMClass=Affinity.exe
+StartupWMClass=publisher.exe
 # Change this to 'photo.exe' or 'designer.exe'; Makes sure the open application gets shown under the shortcut instead of creating a new dock-entry; To get an application's WMClass type 'xprop WM_CLASS' into your terminal and click on the window whose class you want to know
 
