@@ -411,8 +411,8 @@ class AffinityInstallerWidget(Gtk.Box):
         self.install_started = False
         self.btn_install.set_sensitive(True)
         self.btn_install.set_visible(True)
-        self.btn_toggle_progress.set_sensitive(False)
-        self.btn_toggle_progress.set_visible(False)
+        self.btn_toggle_progress.set_sensitive(True)
+        self.btn_toggle_progress.set_visible(True)
         
         if self.error_message:
             self.info_label.set_markup(f'<span color="#e01b24" weight="bold" size="large">{_("Installation failed: ")}</span>\n{self.error_message}')
