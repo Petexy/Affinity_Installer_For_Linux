@@ -19,17 +19,20 @@ LOCALE_DIR = "/usr/share/locale"
 # Set up the locale environment
 try:
     locale.setlocale(locale.LC_ALL, '')
-    lang, _ = locale.getlocale()
+    lang, encoding = locale.getlocale()
     if lang is None:
         lang = 'en'
 except locale.Error:
     lang = 'en'
 
-gettext.bindtextdomain(APP_NAME, LOCALE_DIR)
-gettext.textdomain(APP_NAME)
-translation = gettext.translation(APP_NAME, LOCALE_DIR, languages=[lang], fallback=True)
-translation.install()
-_ = gettext.gettext
+try:
+    _
+except NameError:
+    gettext.bindtextdomain(APP_NAME, LOCALE_DIR)
+    gettext.textdomain(APP_NAME)
+    translation = gettext.translation(APP_NAME, LOCALE_DIR, languages=[lang], fallback=True)
+    translation.install()
+    _ = gettext.gettext
 
 class AffinityInstallerWidget(Gtk.Box):
     def __init__(self, hide_sidebar=False, window=None):
@@ -364,6 +367,22 @@ class AffinityInstallerWidget(Gtk.Box):
                 if not apps_found:
                     self.progress_data += _("Warning: No Affinity application folders found to create shortcuts.\n")
                     GLib.idle_add(self.update_output_buffer, self.progress_data)
+
+                # Step 5: Cleanup
+                self.progress_data += _("\nStep 5: Cleaning up...\n")
+                GLib.idle_add(self.update_output_buffer, self.progress_data)
+                
+                desktop_dir = GLib.get_user_special_dir(GLib.UserDirectory.DIRECTORY_DESKTOP)
+                if desktop_dir:
+                    lnk_path = os.path.join(desktop_dir, "Affinity.lnk")
+                    if os.path.exists(lnk_path):
+                        try:
+                            os.remove(lnk_path)
+                            self.progress_data += _("Removed {}\n").format(lnk_path)
+                        except Exception as e:
+                            self.progress_data += _("Failed to remove {}: {}\n").format(lnk_path, e)
+                
+                GLib.idle_add(self.update_output_buffer, self.progress_data)
 
             except Exception as e:
                 self.error_message = str(e)
