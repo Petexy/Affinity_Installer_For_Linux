@@ -251,6 +251,8 @@ class AffinityInstallerWidget(Gtk.Box):
     def run_installation_flow(self, exe_path):
         """Execute the complete installation flow"""
         def stream_output():
+            if sudo_manager:
+                sudo_manager.start_privileged_session()
             try:
                 def run_and_log(command, fail_msg, env=None):
                     process = subprocess.Popen(
@@ -366,5 +368,6 @@ class AffinityInstallerWidget(Gtk.Box):
         self.progress_visible = False
         self.btn_toggle_progress.set_label(_("Show Progress"))
         if sudo_manager:
+            sudo_manager.stop_privileged_session()
             sudo_manager.forget_password()
         return False
