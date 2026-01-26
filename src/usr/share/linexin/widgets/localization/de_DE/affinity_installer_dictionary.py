@@ -1,13 +1,10 @@
 translations = {
     "Affinity Installer": "Affinity Installer",
-
     "Install the Affinity suite (V2) for Linux": "Installiere die Affinity Suite (V2) für Linux",
     "Supports Affinity Photo 2, Designer 2, and Publisher 2": "Unterstützt Affinity Photo 2, Designer 2 und Publisher 2",
     "Select Installer File": "Installationsdatei Auswählen",
     "Installation cancelled.": "Installation abgebrochen.",
-
     "Install the Affinity suite for Linux\n\nSupports Affinity Photo 2, Designer 2, Publisher 2 and Affinity (2025)": "Installieren Sie die Affinity-Suite für Linux\n\nUnterstützt Affinity Photo 2, Designer 2, Publisher 2 und Affinity (2025)",
-
     "Show Progress": "Fortschritt anzeigen",
     "Hide Progress": "Fortschritt verbergen",
     "Select Affinity .exe file": "Affinity .exe Datei auswählen",
@@ -33,5 +30,11 @@ translations = {
     "Warning: No Affinity application folders found to create shortcuts.\n": "Warnung: Keine Affinity-Anwendungsordner zum Erstellen von Verknüpfungen gefunden.\n",
     "\nError: {}": "\nFehler: {}",
     "Installation failed: ": "Installation fehlgeschlagen: ",
-    "Successfully installed {}!": "{} erfolgreich installiert!"
+    "Successfully installed {}!": "{} erfolgreich installiert!",
+    "Authentication Required": "Authentifizierung erforderlich",
+    "Please enter your password to proceed with the installation.": "Bitte geben Sie Ihr Passwort ein, um mit der Installation fortzufahren.",
+    "Unlock": "Entsperren",
+    "Password": "Passwort",
+    "Authentication Failed": "Authentifizierung fehlgeschlagen",
+    "Incorrect password.": "Falsches Passwort."
 }

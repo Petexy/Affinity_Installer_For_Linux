@@ -1,8 +1,8 @@
 # Maintainer: Petexy <https://github.com/Petexy>
 
 pkgname=affinity-installer2
-pkgver=1.0.2.r
-pkgrel=2
+pkgver=1.1.0.r
+pkgrel=1
 _currentdate=$(date +"%Y-%m-%d%H-%M-%S")
 pkgdesc='Smart Installer for Affinity suite for Linux'
 url='https://github.com/Petexy'

@@ -1,13 +1,10 @@
 translations = {
     "Affinity Installer": "Affinity 安装程序",
-
     "Install the Affinity suite (V2) for Linux": "为 Linux 安装 Affinity 套件 (V2)",
     "Supports Affinity Photo 2, Designer 2, and Publisher 2": "支持 Affinity Photo 2、Designer 2 和 Publisher 2",
     "Select Installer File": "选择安装文件",
     "Installation cancelled.": "安装已取消。",
-
     "Install the Affinity suite for Linux\n\nSupports Affinity Photo 2, Designer 2, Publisher 2 and Affinity (2025)": "为 Linux 安装 Affinity 套件\n\n支持 Affinity Photo 2, Designer 2, Publisher 2 和 Affinity (2025)",
-
     "Show Progress": "显示进度",
     "Hide Progress": "隐藏进度",
     "Select Affinity .exe file": "选择 Affinity .exe 文件",
