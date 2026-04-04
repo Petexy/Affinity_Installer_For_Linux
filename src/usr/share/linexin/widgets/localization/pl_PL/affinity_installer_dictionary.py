@@ -35,5 +35,7 @@ translations = {
     "Unlock": "Odblokuj",
     "Password": "Hasło",
     "Authentication Failed": "Uwierzytelnienie nie powiodło się",
-    "Incorrect password.": "Nieprawidłowe hasło."
+    "Incorrect password.": "Nieprawidłowe hasło.",
+    "Removed {}\n": "Removed {}\n",
+    "Failed to remove {}: {}\n": "Failed to remove {}: {}\n",
 }

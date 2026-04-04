@@ -62,7 +62,7 @@ class AffinityInstallerWidget(Gtk.Box):
         if self.window:
             try:
                 self.window.set_default_size(800, 600)
-                print("Window default size set to 1400x800")
+                print("Window default size set to 800x600")
             except Exception as e:
                 print(f"Failed to resize window: {e}")
         return False
@@ -229,6 +229,7 @@ class AffinityInstallerWidget(Gtk.Box):
                              transient_for=self.get_root()
                         )
                         err_dlg.add_response("ok", _("OK"))
+                        translate_dialog(err_dlg)
                         err_dlg.present()
                         self.finish_installation() 
             else:
@@ -236,6 +237,7 @@ class AffinityInstallerWidget(Gtk.Box):
             dialog.close()
         dialog.connect("response", on_response)
         entry.connect("activate", lambda w: dialog.response("unlock"))
+        translate_dialog(dialog)
         dialog.present()
     def on_toggle_progress_clicked(self, button):
         """Handle progress toggle button"""
@@ -370,4 +372,5 @@ class AffinityInstallerWidget(Gtk.Box):
         if sudo_manager:
             sudo_manager.stop_privileged_session()
             sudo_manager.forget_password()
+        self.user_password = None
         return False

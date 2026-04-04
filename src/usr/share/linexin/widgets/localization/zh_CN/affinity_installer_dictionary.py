@@ -30,5 +30,7 @@ translations = {
     "Warning: No Affinity application folders found to create shortcuts.\n": "警告：未找到 Affinity 应用程序文件夹以创建快捷方式。\n",
     "\nError: {}": "\n错误：{}",
     "Installation failed: ": "安装失败：",
-    "Successfully installed {}!": "{} 安装成功！"
+    "Successfully installed {}!": "{} 安装成功！",
+    "Removed {}\n": "Removed {}\n",
+    "Failed to remove {}: {}\n": "Failed to remove {}: {}\n",
 }

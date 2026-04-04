@@ -36,5 +36,7 @@ translations = {
     "Unlock": "Desbloquear",
     "Password": "Palavra-passe",
     "Authentication Failed": "Autenticação Falhada",
-    "Incorrect password.": "Palavra-passe incorreta."
+    "Incorrect password.": "Palavra-passe incorreta.",
+    "Removed {}\n": "Removed {}\n",
+    "Failed to remove {}: {}\n": "Failed to remove {}: {}\n",
 }
