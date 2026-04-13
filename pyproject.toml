@@ -1,0 +1,20 @@
+[project]
+name = "affinity-installer2"
+version = "1.2.0"
+description = "Smart Installer for Affinity suite for Linux"
+license = "GPL-3.0-only"
+requires-python = ">=3.10"
+authors = [
+    {name = "Petexy"},
+]
+dependencies = [
+    "PyGObject",
+]
+
+[project.urls]
+Homepage = "https://github.com/Petexy/Affinity_Installer_For_Linux"
+Repository = "https://github.com/Petexy/Affinity_Installer_For_Linux"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
