@@ -1,7 +1,7 @@
 # Maintainer: Petexy <https://github.com/Petexy>
 
 pkgname=affinity-installer2
-pkgver=1.2.0.r
+pkgver=1.2.1.r
 pkgrel=2
 pkgdesc='Smart Installer for Affinity suite for Linux'
 url='https://github.com/Petexy'

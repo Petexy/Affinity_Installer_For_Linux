@@ -4,7 +4,10 @@ post_install()
 	HOME=/home/$DESKTOP_USER
 	sudo cp -rf /etc/skel/.local/share/linexin/* $HOME/.local/share/linexin/
 	sudo chmod 755 $HOME/.local/share/linexin/shortcuts -R
+	sudo chmod 755 $HOME/.local/share/linexin/scripts -R
+	sudo chmod 755 /usr/local/bin/rum
 	sudo chown $DESKTOP_USER $HOME/.local/share/linexin/shortcuts -R
+	sudo chown $DESKTOP_USER $HOME/.local/share/linexin/scripts -R
 	echo "post_install finished" >> /tmp/affinity-install.log
 }
 
