@@ -1,0 +1,16 @@
+/target/
+# Scratch HOME, fake commands and renders of examples/compare.sh
+/.test-env/
+__pycache__/
+*.pyc
+# makepkg output of ./PKGBUILD
+/src/
+/pkg/
+/*.pkg.tar.*
+/*.log
+
+# The file manager's own note about this folder, not the project's.
+.directory
+
+# A local override of where the Center's crates come from (README.md).
+/.cargo/config.toml

@@ -1,0 +1,26 @@
+[Desktop Entry]
+Name=Designer 2
+GenericName=Designer on Wine
+Comment=
+Exec=sh -c /usr/bin/designer2
+# Change the rum [version] and the [USER] paths to the right directory
+
+Icon=/usr/share/icons/designer.png
+# Get any png or svg of the logo to add it here; To use your current icon-pack simply use the icon's name without the file extension, eg. 'affinity-publisher-2'
+
+Categories=Graphics
+# To be sorted with other Graphics software in your "start" menu
+
+Keywords=Graphics;2DGraphics;RasterGraphics;VectorGraphics;image;editor;vector;drawing;
+# Alternative keywords for app search
+
+MimeType=application/x-affinity
+# File type association
+
+NoDisplay=false
+StartupNotify=true
+Terminal=false
+Type=Application
+StartupWMClass=designer.exe
+# Change this to 'photo.exe' or 'designer.exe'; Makes sure the open application gets shown under the shortcut instead of creating a new dock-entry; To get an application's WMClass type 'xprop WM_CLASS' into your terminal and click on the window whose class you want to know
+

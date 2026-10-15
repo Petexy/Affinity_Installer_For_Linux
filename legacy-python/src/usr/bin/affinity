@@ -1,0 +1,4 @@
+#!/bin/sh
+
+# This script launches Affinity 2 via Wine
+rum wine-affinity "$HOME/.WineAffinity" wine "$HOME/.WineAffinity/drive_c/Program Files/Affinity/Affinity/Affinity.exe"

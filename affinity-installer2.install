@@ -1,13 +1,30 @@
+# The user the package is installed for: the one who ran sudo, or pkexec,
+# else (a root shell, a chroot) the first desktop account, as before.
+installing_user()
+{
+	if [ -n "${SUDO_USER:-}" ] && [ "$SUDO_USER" != root ]; then
+		printf '%s\n' "$SUDO_USER"
+	elif [ -n "${PKEXEC_UID:-}" ] && [ "$PKEXEC_UID" != 0 ]; then
+		getent passwd "$PKEXEC_UID" | cut -d: -f1
+	else
+		getent passwd | awk -F: '$3 >= 1000 && $3 < 65534 {print $1}' | head -n1
+	fi
+}
+
 post_install()
 {
-	DESKTOP_USER=$(getent passwd | awk -F: '$3 >= 1000 && $3 < 65534 {print $1}' | head -n1)
-	HOME=/home/$DESKTOP_USER
-	sudo cp -rf /etc/skel/.local/share/linexin/* $HOME/.local/share/linexin/
-	sudo chmod 755 $HOME/.local/share/linexin/shortcuts -R
-	sudo chmod 755 $HOME/.local/share/linexin/scripts -R
-	sudo chmod 755 /usr/local/bin/rum
-	sudo chown $DESKTOP_USER $HOME/.local/share/linexin/shortcuts -R
-	sudo chown $DESKTOP_USER $HOME/.local/share/linexin/scripts -R
+	chmod 755 /usr/local/bin/rum
+	DESKTOP_USER=$(installing_user)
+	[ -n "$DESKTOP_USER" ] || return 0
+	# Their home as the system has it, not assumed under /home.
+	USER_HOME=$(getent passwd "$DESKTOP_USER" | cut -d: -f6)
+	[ -n "$USER_HOME" ] && [ -d "$USER_HOME" ] || return 0
+	mkdir -p "$USER_HOME/.local/share/linexin"
+	cp -rf /etc/skel/.local/share/linexin/* "$USER_HOME/.local/share/linexin/"
+	chmod 755 "$USER_HOME/.local/share/linexin/shortcuts" -R
+	chmod 755 "$USER_HOME/.local/share/linexin/scripts" -R
+	chown "$DESKTOP_USER" "$USER_HOME/.local/share/linexin/shortcuts" -R
+	chown "$DESKTOP_USER" "$USER_HOME/.local/share/linexin/scripts" -R
 	echo "post_install finished" >> /tmp/affinity-install.log
 }
 

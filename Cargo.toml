@@ -1,0 +1,42 @@
+[package]
+name = "affinity-installer"
+version = "3.0.0"
+edition = "2024"
+rust-version = "1.98"
+license = "GPL-3.0-or-later"
+description = "Native Affinity Installer widget for Linexin Center"
+publish = false
+repository = "https://github.com/Petexy/Affinity_Installer_For_Linux"
+
+# The sources live in widget/, not src/: the PKGBUILD sits in this directory
+# and makepkg owns ./src (`makepkg -c`/`-C` delete it).
+[lib]
+name = "affinity_installer"
+path = "widget/lib.rs"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+gtk = { package = "gtk4", version = "0.10", features = ["v4_12"] }
+adw = { package = "libadwaita", version = "0.8", features = ["v1_5"] }
+futures-channel = "0.3"
+futures-util = { version = "0.3", default-features = false }
+libc = "0.2"
+# The Linexin Center's crates, from its repository (README.md says how to
+# build against a local checkout of it instead).
+linexin-plugin-api = { git = "https://github.com/Petexy/Linexin-Center" }
+linexin-lxb = { git = "https://github.com/Petexy/Linexin-Center" }
+
+[dev-dependencies]
+libloading = "0.8"
+# The Center's own dictionary loader and translate_dialog, for examples/harness.rs.
+linexin-localization = { git = "https://github.com/Petexy/Linexin-Center" }
+
+# A standalone workspace, not a member of anything above it.
+[workspace]
+
+[profile.dev]
+debug = 1
+
+[profile.release]
+lto = "thin"
+strip = "debuginfo"
